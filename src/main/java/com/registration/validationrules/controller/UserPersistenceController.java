@@ -52,10 +52,12 @@ public class UserPersistenceController {
 	@GetMapping(value = "/register/{client_id}")
 	private ApplicationRegistrationMetadatResponse getApplicationRegistrationMetadatResponse(
 			@PathVariable String client_id) {
+		
+		String regexPattern = "(^[a-zA-Z0-9-_.']+@[a-zA-Z0-9-_.']+.[a-zA-Z]+$)|(^[a-zA-Z0-9-_.#$&+']{3,320}$)";
 
 		Source source = new Source("B2C", List.of("Registeration", "Helios"));
 		List<String> dropdpwn = List.of("Standard", "Admin");
-		validationRules validationRules = new validationRules(true, 1, 50, "a-z", dropdpwn);
+		validationRules validationRules = new validationRules(true, 1, 50, regexPattern, dropdpwn);
 		List<Field> fields = List
 				.of(new Field("firstName", "first name", "text", "text", 1, "contact", 1, 1, source, validationRules));
 
@@ -208,7 +210,7 @@ public class UserPersistenceController {
 //							state, country, role, postalCode);
 //					user.setCreateDate(Date.valueOf(LocalDate.now()));
 //					user.setModifiedDate(Date.valueOf(LocalDate.now()));
-					 user = this.userService.buildUserBean(request, validationRules.getDropdown(), clientId, catrecId, cwsId, username);
+					 user = this.userService.buildUserBean(request, validationRules.getDropdown(), clientId, catrecId, cwsId, username, validationRules.getRegex());
 					
 
 				}
@@ -265,7 +267,7 @@ public class UserPersistenceController {
 					}
 					
 					//
-					User updatedDetails = this.userService.buildUserBean(request, validationRules.getDropdown(), user.getClientId(), guid, user.getCwsId(), user.getUserName());
+					User updatedDetails = this.userService.buildUserBean(request, validationRules.getDropdown(), user.getClientId(), guid, user.getCwsId(), user.getUserName(), validationRules.getRegex());
 					userToSave = this.userService.acquireExistingUserDetails(updatedDetails);
 				}
 			}

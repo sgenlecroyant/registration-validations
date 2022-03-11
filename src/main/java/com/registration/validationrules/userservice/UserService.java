@@ -35,7 +35,7 @@ public class UserService {
 	String postalCode = null;
 	
 	public User buildUserBean(
-			UserRequestFields request, List<String> roles, String clientId, String catrecId, String cwsId, String username) {
+			UserRequestFields request, List<String> roles, String clientId, String catrecId, String cwsId, String username, String regexPattern) {
 		
 		if(request.getFieldName().equalsIgnoreCase("role")) {
 			this.validationService.validateUserRole(request.getFieldValue(), roles);
@@ -55,6 +55,10 @@ public class UserService {
 		}
 		if (request.getFieldName().equalsIgnoreCase("email")) {
 			email = request.getFieldValue();
+			boolean isEmailValid = this.validationService.validateEmail(email, regexPattern);
+			if(!isEmailValid) {
+				throw new RuntimeException("The Email is not valid! REJECTED!");
+			}
 			System.out.println("email: ".toUpperCase()+ ""+email);
 		}
 

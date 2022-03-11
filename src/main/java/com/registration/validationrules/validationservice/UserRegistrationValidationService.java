@@ -2,10 +2,10 @@ package com.registration.validationrules.validationservice;
 
 import java.util.List;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.springframework.stereotype.Service;
-
-import lombok.experimental.FieldNameConstants;
 
 @Service
 public class UserRegistrationValidationService {
@@ -47,6 +47,16 @@ public class UserRegistrationValidationService {
 					.orElseThrow(() -> new RuntimeException("unrecognized role: " +userRole));
 		}
 		return true;
+	}
+	
+	public boolean validateEmail(String email, String regexPattern) {
+		
+		System.out.println("validating email ...");
+		Pattern compiledPattern = Pattern.compile(regexPattern);
+		
+		Matcher patternMatcher = compiledPattern.matcher(email);
+		System.out.println("Email Valifator: "+patternMatcher.matches());
+		return patternMatcher.matches();
 	}
 
 }
