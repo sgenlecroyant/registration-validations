@@ -30,6 +30,7 @@ public class ApplicationRegistrationMetadataResponseApplication implements Comma
 		Matcher patternMatcher = compiledPattern.matcher("myemail");
 		boolean matches = patternMatcher.matches();
 		System.out.println("email validated: " + matches);
+		
 	}
 
 }
