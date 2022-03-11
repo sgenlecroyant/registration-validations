@@ -1,0 +1,37 @@
+ApplicationRegistrationMetadatResponse.json
+{
+	"appName": "Fleet management",
+	"appDescription": "Fleet Management",
+	"sections": [
+	{
+		"sectionName": "contact',
+		"sectionName": 1,
+		"logicFlow": "register",
+		"fields":	[
+		{
+			"fieldName": "firstName",
+			"label":	"first name",
+			"fieldType": "text",
+			"uiControlType": "text",
+			"fieldOreder": 1,
+			"groupName": "contact",
+			"pageNumber": 1,
+			"groupOrder": 1,
+			"source": {
+				"master": "B2C",
+				"copy": "Registeration, Helios"
+			},
+			"validationRules": {
+				"isMobdatory": true,
+				"minLength": 1,
+				"maxLength": 50,
+				"regex": "a-z",
+				"dropdown": [
+					"Standard, Admin"
+					]
+				   }
+			     }
+			  ]
+		    }
+	    ]
+	}
