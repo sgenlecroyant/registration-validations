@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import javax.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +19,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 import com.registration.validationrules.entity.User;
+import com.registration.validationrules.exception.InvalidIdException;
+import com.registration.validationrules.exception.UserNotFoundException;
 import com.registration.validationrules.model.ApplicationRegistrationMetadatResponse;
 import com.registration.validationrules.model.Field;
 import com.registration.validationrules.model.Section;
@@ -42,7 +46,7 @@ public class UserPersistenceController {
 
 	@Autowired
 	private UserRequestValidatorService userRequestValidatorService;
-	
+
 	@Autowired
 	private UserService userService;
 
@@ -52,7 +56,7 @@ public class UserPersistenceController {
 	@GetMapping(value = "/register/{client_id}")
 	private ApplicationRegistrationMetadatResponse getApplicationRegistrationMetadatResponse(
 			@PathVariable String client_id) {
-		
+
 		String regexPattern = "(^[a-zA-Z0-9-_.']+@[a-zA-Z0-9-_.']+.[a-zA-Z]+$)|(^[a-zA-Z0-9-_.#$&+']{3,320}$)";
 
 		Source source = new Source("B2C", List.of("Registeration", "Helios"));
@@ -76,23 +80,21 @@ public class UserPersistenceController {
 				ApplicationRegistrationMetadatResponse.class);
 		ApplicationRegistrationMetadatResponse metadatResponse = responseEntity.getBody();
 		List<UserRequestFields> userRequestFields = userRequest.getFields();
-		
+
 		String clientId = userRequest.getClientId();
 		String catrecId = userRequest.getCatrecId();
 		String cwsId = userRequest.getCwsId();
 		String username = userRequest.getUsername();
-		
-		
 
 		// validate IDs
 		boolean areIdsValid = this.userRequestValidatorService.validateIds(clientId, catrecId, cwsId);
-		System.out.println("client_id: "+client_id+ "catrecId:" +catrecId+ "cwsId: " +cwsId);
+		System.out.println("client_id: " + client_id + "catrecId:" + catrecId + "cwsId: " + cwsId);
 		if (!areIdsValid) {
-			throw new RuntimeException("No ID should be null or empty");
+			throw new InvalidIdException("Invalid ID", "No ID should be NULL or EMPTY");
 		}
 
 		List<Section> sections = metadatResponse.getSections();
-		
+
 		String firstName = null;
 		String lastName = null;
 		String email = null;
@@ -108,7 +110,7 @@ public class UserPersistenceController {
 		String role = null;
 		Integer internalId = 0;
 		String postalCode = null;
-		
+
 		User user = null;
 
 		for (int i = 0; i < sections.size(); i++) {
@@ -121,15 +123,13 @@ public class UserPersistenceController {
 
 				for (int k = 0; k < userRequestFields.size(); k++) {
 					UserRequestFields request = userRequestFields.get(k);
-					
-					
-					if(validationRules.getIsMondatory()) {
 
-						this.validationService.
-						validateFieldName.apply(request.getFieldName());
-					
-						this.validationService.validateFieldValue(request.getFieldValue(), validationRules.getMinLength(),
-								validationRules.getMaxLength());
+					if (validationRules.getIsMondatory()) {
+
+						this.validationService.validateFieldName.apply(request.getFieldName());
+
+						this.validationService.validateFieldValue(request.getFieldValue(),
+								validationRules.getMinLength(), validationRules.getMaxLength());
 					}
 					System.out.println(request);
 //					if(request.getFieldName().equalsIgnoreCase("role")) {
@@ -210,8 +210,8 @@ public class UserPersistenceController {
 //							state, country, role, postalCode);
 //					user.setCreateDate(Date.valueOf(LocalDate.now()));
 //					user.setModifiedDate(Date.valueOf(LocalDate.now()));
-					 user = this.userService.buildUserBean(request, validationRules.getDropdown(), clientId, catrecId, cwsId, username, validationRules.getRegex());
-					
+					user = this.userService.buildUserBean(request, validationRules.getDropdown(), clientId, catrecId,
+							cwsId, username, validationRules.getRegex());
 
 				}
 			}
@@ -225,7 +225,7 @@ public class UserPersistenceController {
 	public ResponseEntity<User> updateUser(@RequestBody UserRequest userRequest, @PathVariable String guid) {
 		Optional<User> findByGuid = this.userRepo.findByGuid(guid);
 		if (findByGuid.isEmpty()) {
-			throw new RuntimeException("there is no user with such GUID: " + guid);
+			throw new UserNotFoundException("there is no user with such GUID: " + guid, "Provide the correct ID");
 		}
 
 		String client_id = UUID.randomUUID().toString();
@@ -236,17 +236,19 @@ public class UserPersistenceController {
 		List<UserRequestFields> userRequestFields = userRequest.getFields();
 
 		List<Section> sections = metadatResponse.getSections();
-		
+
 		User user = findByGuid.get();
 		User userToSave = null;
-		
-		boolean areIdsValid = this.userRequestValidatorService.validateIds(user.getClientId(), user.getCatrecId(), user.getCwsId());
+
+//		boolean areIdsValid = this.userRequestValidatorService.validateIds(user.getClientId(),
+//				user.getCatrecId(), user.getCwsId());
+		boolean areIdsValid = this.userRequestValidatorService.validateIds(userRequest.getClientId(),
+				userRequest.getCatrecId(), userRequest.getCwsId());
 
 		if (!areIdsValid) {
-			throw new RuntimeException("No ID should be null or empty");
+			throw new InvalidIdException("Invalid ID", "No ID should be NULL or EMPTY");
 		}
-		
-		
+
 		for (int i = 0; i < sections.size(); i++) {
 			Section section = sections.get(i);
 
@@ -254,20 +256,20 @@ public class UserPersistenceController {
 				Field field = section.getFields().get(j);
 
 				validationRules validationRules = field.getValidationRules();
-				
+
 				for (int k = 0; k < userRequestFields.size(); k++) {
 					UserRequestFields request = userRequestFields.get(k);
-					if(validationRules.getIsMondatory()) {
+					if (validationRules.getIsMondatory()) {
 
-						this.validationService.
-						validateFieldName.apply(request.getFieldName());
-					
-						this.validationService.validateFieldValue(request.getFieldValue(), validationRules.getMinLength(),
-								validationRules.getMaxLength());
+						this.validationService.validateFieldName.apply(request.getFieldName());
+
+						this.validationService.validateFieldValue(request.getFieldValue(),
+								validationRules.getMinLength(), validationRules.getMaxLength());
 					}
-					
+
 					//
-					User updatedDetails = this.userService.buildUserBean(request, validationRules.getDropdown(), user.getClientId(), guid, user.getCwsId(), user.getUserName(), validationRules.getRegex());
+					User updatedDetails = this.userService.buildUserBean(request, validationRules.getDropdown(),
+							user.getClientId(), guid, user.getCwsId(), user.getUserName(), validationRules.getRegex());
 					userToSave = this.userService.acquireExistingUserDetails(updatedDetails);
 				}
 			}

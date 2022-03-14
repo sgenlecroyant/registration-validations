@@ -12,9 +12,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 
 
 @AllArgsConstructor
@@ -30,6 +28,7 @@ public class User implements Serializable	 {
 	@Id
 	private String guid;
 	private String userName;
+	
 	private int internalId;
 	private String catrecId;
 	private String clientId;

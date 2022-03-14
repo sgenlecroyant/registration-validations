@@ -26,8 +26,9 @@ public class ApplicationRegistrationMetadataResponseApplication implements Comma
 	@Override
 	public void run(String... args) throws Exception {
 		String pattern = "(^[a-zA-Z0-9-_.']+@[a-zA-Z0-9-_.']+.[a-zA-Z]+$)|(^[a-zA-Z0-9-_.#$&+']{3,320}$)";
-		Pattern compiledPattern = Pattern.compile(pattern);
-		Matcher patternMatcher = compiledPattern.matcher("myemail");
+		String pa2 = "[a-zA-Z0-9]+@+[a-zA-Z]+\\.+[a-z]+";
+		Pattern compiledPattern = Pattern.compile(pa2);
+		Matcher patternMatcher = compiledPattern.matcher("myemail1010");
 		boolean matches = patternMatcher.matches();
 		System.out.println("email validated: " + matches);
 		
